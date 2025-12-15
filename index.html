@@ -1,88 +1,147 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pediatric Dosage Calculator</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
-    .box { max-width:700px; margin:auto; background:#fff; padding:20px; border-radius:8px; }
-    h2 { text-align:center; }
-    label { display:block; margin-top:15px; font-weight:bold; }
-    select, input, button { width:100%; padding:10px; margin-top:5px; font-size:16px; }
-    button { margin-top:20px; background:#007aff; color:white; border:none; border-radius:5px; }
-    .result { margin-top:20px; padding:15px; background:#e6f4ea; border-left:5px solid #2ecc71; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e9f7ef;
+      border-left: 5px solid #28a745;
+      font-size: 16px;
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
-<body><div class="box">
-  <h2>Pediatric Dosage Calculator</h2><label>Formula</label> <select id="formula"> <option value="">-- Select --</option> <option value="young">Young's Formula</option> <option value="dilling">Dilling's Formula</option> <option value="fried">Fried's Formula</option> <option value="clark">Clark's Formula (kg input)</option> <option value="bsa">BSA Based Dose</option> <option value="rule6">Rule of 6 (NICU)</option> <option value="fluid">Maintenance Fluid</option> <option value="parkland">Parkland Formula</option> </select>
+<body>
+  <div class="container">
+    <h1>Pediatric Dosage Calculator</h1><label for="formula">Select Formula</label>
+<select id="formula" onchange="updateFields()">
+  <option value="">-- Select --</option>
+  <option value="young">Young's Formula</option>
+  <option value="dilling">Dilling's Formula</option>
+  <option value="fried">Fried's Formula</option>
+  <option value="clark">Clark's Formula</option>
+  <option value="bsa">BSA Based Dose</option>
+  <option value="rule6">Rule of 6 (Neonatal Infusion)</option>
+  <option value="fluid">Maintenance Fluid (100-50-20)</option>
+  <option value="parkland">Parkland Formula (Burns)</option>
+</select>
 
-  <div id="fields"></div>  <script>
-    document.getElementById('formula').addEventListener('change', showFields);
-  </script><button onclick="calculate()">Calculate</button>
+<div id="inputs"></div>
 
-  <div id="output" class="result" style="display:none"></div>
-</div><script>
-function showFields() {
-  var f = document.getElementById('formula').value;
-  var d = document.getElementById('fields');
-  d.innerHTML = '';
+<button onclick="calculateDose()">Calculate</button>
 
-  function add(id, label) {
-    d.innerHTML += '<label>' + label + '</label><input type="text" id="' + id + '">';
-  }
+<div id="result" class="result hidden"></div>
 
-  if (f === 'young' || f === 'dilling') {
-    add('age', 'Age (years)');
-    add('adult', 'Adult dose');
-  }
-  if (f === 'fried') {
-    add('months', 'Age (months)');
-    add('adult', 'Adult dose');
-  }
-  if (f === 'clark') {
-    add('weight', 'Weight (kg)');
-    add('adult', 'Adult dose');
-  }
-  if (f === 'bsa') {
-    add('bsa', 'Child BSA (m²)');
-    add('adult', 'Adult dose');
-  }
-  if (f === 'rule6' || f === 'fluid') {
-    add('weight', 'Weight (kg)');
-  }
-  if (f === 'parkland') {
-    add('weight', 'Weight (kg)');
-    add('tbsa', '% TBSA burn');
-  }
-}
+  </div>  <script>
+    function updateFields() {
+      const f = document.getElementById('formula').value;
+      const inputs = document.getElementById('inputs');
+      inputs.innerHTML = '';
 
-function val(id) {
-  var e = document.getElementById(id);
-  if (!e) return 0;
-  return parseFloat(e.value) || 0;
-}
+      const addInput = (id, label) => {
+        inputs.innerHTML += `
+          <label>${label}</label>
+          <input type="number" id="${id}" step="any" />
+        `;
+      };
 
-function calculate() {
-  var f = document.getElementById('formula').value;
-  var r = 0;
+      if (['young', 'dilling', 'fried', 'clark', 'bsa'].includes(f)) {
+        addInput('adultDose', 'Adult Dose');
+      }
+      if (f === 'young' || f === 'dilling') addInput('ageYears', 'Age (years)');
+      if (f === 'fried') addInput('ageMonths', 'Age (months)');
+      if (f === 'clark') addInput('weightKg', 'Weight (kg)');
+      if (f === 'bsa') addInput('bsa', 'Child BSA (m²)');
+      if (f === 'rule6' || f === 'fluid' || f === 'parkland') addInput('weightKg', 'Weight (kg)');
+      if (f === 'parkland') addInput('tbsa', '% TBSA Burn');
+    }
 
-  if (f === 'young') r = (val('age') / (val('age') + 12)) * val('adult');
-  else if (f === 'dilling') r = (val('age') / 20) * val('adult');
-  else if (f === 'fried') r = (val('months') / 150) * val('adult');
-  else if (f === 'clark') r = ((val('weight') * 2.2046) / 150) * val('adult');
-  else if (f === 'bsa') r = (val('bsa') / 1.73) * val('adult');
-  else if (f === 'rule6') r = 6 * val('weight');
-  else if (f === 'fluid') {
-    var w = val('weight');
-    if (w <= 10) r = 100 * w;
-    else if (w <= 20) r = 1000 + (w - 10) * 50;
-    else r = 1500 + (w - 20) * 20;
-  }
-  else if (f === 'parkland') r = 4 * val('weight') * val('tbsa');
+    function calculateDose() {
+      const f = document.getElementById('formula').value;
+      let result = 0;
 
-  var o = document.getElementById('output');
-  o.style.display = 'block';
-  o.innerHTML = 'Result: <b>' + r.toFixed(2) + '</b>';
-}
-</script></body>
+      const get = id => parseFloat(document.getElementById(id)?.value || 0);
+
+      switch (f) {
+        case 'young':
+          result = (get('ageYears') / (get('ageYears') + 12)) * get('adultDose');
+          break;
+        case 'dilling':
+          result = (get('ageYears') / 20) * get('adultDose');
+          break;
+        case 'fried':
+          result = (get('ageMonths') / 150) * get('adultDose');
+          break;
+        case 'clark':
+          // Convert kg to lb internally for Clark's formula
+          const weightLb = get('weightKg') * 2.2046;
+          result = (weightLb / 150) * get('adultDose');
+          break;
+        case 'bsa':
+          result = (get('bsa') / 1.73) * get('adultDose');
+          break;
+        case 'rule6':
+          result = 6 * get('weightKg');
+          break;
+        case 'fluid':
+          let w = get('weightKg');
+          result = w <= 10 ? 100 * w : w <= 20 ? 1000 + (w - 10) * 50 : 1500 + (w - 20) * 20;
+          break;
+        case 'parkland':
+          result = 4 * get('weightKg') * get('tbsa');
+          break;
+        default:
+          alert('Please select a formula');
+          return;
+      }
+
+      document.getElementById('result').classList.remove('hidden');
+      document.getElementById('result').innerHTML = `Calculated Value: <b>${result.toFixed(2)}</b>`;
+    }
+  </script></body>
 </html>
